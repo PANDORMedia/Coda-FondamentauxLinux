@@ -1,8 +1,11 @@
-# Teacher-facing material — not distributed to students
+# Teacher-facing / planning material — not distributed to students
 corrections-formateur.md
 checklist-formateur.md
 guide-timing-formateur.md
 sources-recherche.md
+Syllabus.md
+Plan.md
+templates/
 
 # Editor / OS artefacts
 .DS_Store

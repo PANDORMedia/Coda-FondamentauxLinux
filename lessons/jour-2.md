@@ -877,7 +877,7 @@ for VAR in LISTE; do
 done
 ```
 
-**Exemple — sur un glob de fichiers**
+**Exemple - sur un glob de fichiers**
 
 ```bash
 for f in *.log; do
@@ -893,7 +893,7 @@ Faire taper la boucle dans un dossier qui contient quelques `.log` et quelques a
 
 ---
 
-## Bash : `for` — variantes utiles
+## Bash : `for` - variantes utiles
 
 **Sur une plage numerique**
 
@@ -924,7 +924,7 @@ Faire vivre le bug : creer "rapport final.txt", lancer `for f in $(ls)` puis `fo
 
 ---
 
-## Bash : `while read` — fichier ligne par ligne
+## Bash : `while read` - fichier ligne par ligne
 
 **Syntaxe**
 
@@ -955,7 +955,7 @@ Faire essayer SANS `IFS=` ni `-r` sur un fichier avec un espace en debut de lign
 
 ---
 
-## Bash : `while read` — depuis un pipe + compteur
+## Bash : `while read` - depuis un pipe + compteur
 
 **Depuis la sortie d'une commande**
 
@@ -1149,7 +1149,7 @@ Faire vivre les deux pieges (`grep` et `$1` avec `-u`). C'est la le plus haut "R
 
 ---
 
-## Bash : `trap` — reagir aux signaux
+## Bash : `trap` - reagir aux signaux
 
 **Syntaxe**
 
@@ -1211,7 +1211,7 @@ Le pattern `mktemp -d` + `trap ... EXIT` est universel en script d'admin. Beauco
 
 ---
 
-## Bash : `getopts` — la syntaxe
+## Bash : `getopts` - la syntaxe
 
 **Syntaxe**
 
@@ -1240,7 +1240,7 @@ Insister sur le `:` dans OPTSTRING. C'est ce qui change "option booleenne" en "o
 
 ---
 
-## Bash : `getopts` — exemple complet
+## Bash : `getopts` - exemple complet
 
 ```bash
 #!/usr/bin/env bash
@@ -1330,9 +1330,9 @@ Traite : /tmp/demo/rapport final.txt
 
 Les **trois changements** :
 
-1. `target="$1"` — guillemets autour de la variable.
-2. `find "$target"` — guillemets meme dans une commande.
-3. `-print0` + `while read -d ''` — separateur `\0` au lieu de l'espace.
+1. `target="$1"` - guillemets autour de la variable.
+2. `find "$target"` - guillemets meme dans une commande.
+3. `-print0` + `while read -d ''` - separateur `\0` au lieu de l'espace.
 
 > La difference entre script de TP et script de prod : 4 paires de guillemets et `-print0`.
 
@@ -1367,7 +1367,7 @@ Le faire taper. C'est le pattern le plus important du jour pour ecrire des scrip
 
 ---
 
-## Recette : iterer — pourquoi chaque option
+## Recette : iterer - pourquoi chaque option
 
 | Element | Pourquoi |
 | --- | --- |
@@ -1397,9 +1397,9 @@ La variante `< <(...)` resout le piege du sous-shell evoque slide while. Si quel
 
 ---
 
-## Recettes Bash — `die()` et heredoc
+## Recettes Bash - `die()` et heredoc
 
-**`die()` — quitter proprement avec un message**
+**`die()` - quitter proprement avec un message**
 
 ```bash
 die() { echo "ERREUR: $*" >&2; exit 1; }
@@ -1411,7 +1411,7 @@ command -v jq >/dev/null || die "jq requis, installe-le"
 
 > `die` est le rituel le plus important : un script pro a **presque toujours** un helper `die`. Garder le snippet quelque part.
 
-**Heredoc — generer un fichier**
+**Heredoc - generer un fichier**
 
 ```bash
 cat > /tmp/conf.ini <<'EOF'
@@ -1437,9 +1437,9 @@ Note:
 
 ---
 
-## Recettes Bash — tableaux et confirmation
+## Recettes Bash - tableaux et confirmation
 
-**Tableau — liste indexee**
+**Tableau - liste indexee**
 
 ```bash
 fichiers=("a.txt" "b.txt" "c.txt")

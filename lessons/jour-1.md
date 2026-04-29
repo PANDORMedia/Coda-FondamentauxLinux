@@ -136,7 +136,7 @@ Relier au contexte des etudiants. Linux n'est pas seulement une alternative desk
   </div>
   <div class="card blue">
     <h4>Steam Deck</h4>
-    <p>Console portable de Valve, sortie en 2022, sous SteamOS — une distribution Linux base Arch. Plusieurs millions d'unites vendues.</p>
+    <p>Console portable de Valve, sortie en 2022, sous SteamOS - une distribution Linux base Arch. Plusieurs millions d'unites vendues.</p>
   </div>
   <div class="card amber">
     <h4>ProtonDB</h4>
@@ -144,7 +144,7 @@ Relier au contexte des etudiants. Linux n'est pas seulement une alternative desk
   </div>
 </div>
 
-> En 5 ans, Valve a transforme Linux en plateforme de jeu credible — et tout est open source.
+> En 5 ans, Valve a transforme Linux en plateforme de jeu credible - et tout est open source.
 
 Note:
 Valve a investi dans Linux par crainte de Microsoft (Windows 8 store ferme). Proton est un fork de Wine maintenu par Valve et CodeWeavers. Le Steam Deck a fait basculer la perception : Linux peut etre une console grand public.

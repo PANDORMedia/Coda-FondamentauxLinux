@@ -1,0 +1,12 @@
+# Teacher-facing material — not distributed to students
+corrections-formateur.md
+checklist-formateur.md
+guide-timing-formateur.md
+
+# Editor / OS artefacts
+.DS_Store
+.claude/
+
+# Stale build artefacts
+tp03b-toolkit-texte.zip
+*.bak

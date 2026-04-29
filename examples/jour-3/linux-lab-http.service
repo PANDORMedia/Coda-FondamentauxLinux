@@ -1,0 +1,12 @@
+[Unit]
+Description=Linux lab mini HTTP service
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/linux-lab-site
+ExecStart=/usr/bin/python3 /opt/linux-lab-site/mini-server.py
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

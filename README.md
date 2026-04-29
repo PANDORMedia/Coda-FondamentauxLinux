@@ -1,6 +1,6 @@
 # Fondamentaux de Linux
 
-Statut : **cours construit**. Le dossier contient le syllabus, le plan, les slides, les TP, les exemples et les garde-fous formateur.
+Cours de 3 jours pour acquérir les fondamentaux Linux utiles en développement, DevOps, support, cybersécurité d'entrée de gamme et systèmes embarqués.
 
 ## Intention
 
@@ -24,33 +24,27 @@ Le format pédagogique reste simple :
 
 - [Syllabus.md](Syllabus.md) : objectifs, public, prérequis, compétences et évaluation.
 - [Plan.md](Plan.md) : déroulé détaillé jour par jour avec minutage magistral/pratique.
-- [guide-timing-formateur.md](guide-timing-formateur.md) : stop-loss, ordre de sacrifice et checkpoints.
-- [checklist-formateur.md](checklist-formateur.md) : check rapide avant et pendant la session.
-- [corrections-formateur.md](corrections-formateur.md) : **document formateur uniquement**, corrections de tous les exercices du cahier + barème.
-- [sources-recherche.md](sources-recherche.md) : sources web utilisées pour cadrer le syllabus.
 - `slides/` : moteur de slides local.
-- `lessons/` : contenu des 3 journées.
-- `exercises/` : TP liés au panneau TP **et** [cahier d'exercices](exercises/cahier-exercices.md) à 36 exercices remis aux étudiants.
-- `examples/` : fichiers de logs, CSV, scripts et services.
-- `scripts/` : serveur local.
+- `lessons/` : contenu des 3 journées (J1, J2, J3).
+- `exercises/` : TP individuels **et** [cahier d'exercices](exercises/cahier-exercices.md) à 36 exercices.
+- `examples/` : fichiers de logs, CSV, scripts et services pour les TP.
+- `scripts/` : serveur local pour ouvrir les slides.
+- `templates/` : gabarits de leçons.
 
-## Ce qui est remis aux étudiants vs formateurs
-
-| Document | Étudiant | Formateur |
-| --- | :---: | :---: |
-| Slides (`slides/`) | oui | oui |
-| Lessons (`lessons/`) | oui | oui |
-| TP individuels (`exercises/0X-...md`) | oui | oui |
-| **Cahier d'exercices** (`exercises/cahier-exercices.md`) | oui | oui |
-| **Corrections** (`corrections-formateur.md`) | **non** | oui |
-| Guide timing, checklist | non | oui |
-
-## Prochaine étape
-
-Lancer les slides :
+## Lancer les slides
 
 ```bash
 scripts/serve.sh
 ```
 
 Puis ouvrir `http://localhost:8000/`.
+
+## Naviguer dans les slides
+
+| Touche | Action |
+| --- | --- |
+| `←` / `→` | slide précédente / suivante |
+| `1` `2` `3` | aller au jour 1/2/3 |
+| `T` | ouvrir le TP lié à la slide courante |
+| `M` | menu des slides |
+| `F` | plein écran |

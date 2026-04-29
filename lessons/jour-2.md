@@ -748,7 +748,7 @@ La demarche : montrer la syntaxe pure, puis un usage. Faire vivre le bug avec un
 
 ---
 
-## Bash : tests et conditions
+## Bash : tests et `if`
 
 **Syntaxe**
 
@@ -778,17 +778,35 @@ else
 fi
 ```
 
-| Test | Vrai si... |
-| --- | --- |
-| `-e f` / `-f f` / `-d f` | existe / fichier / dossier |
-| `-r f` / `-w f` / `-x f` | lisible / ecriture / executable |
-| `-z s` / `-n s` | chaine vide / non vide |
-| `s1 = s2` / `s1 != s2` | egalite de chaines |
-| `n1 -eq n2`, `-lt`, `-gt` | tests numeriques |
-| `[[ s == *.log ]]` | glob sur chaine (uniquement avec `[[ ]]`) |
+> Preferer `[[ ]]` en Bash. Garder `[ ]` si le script doit tourner avec `/bin/sh`.
 
 Note:
-Preferer `[[ ]]` en Bash : moins de pieges (pas besoin de guillemeter dans certaines comparaisons). Garder `[ ]` si le script doit tourner avec `/bin/sh`.
+Faire taper la version `[ ]` puis `[[ ]]` sur le meme test, pour sentir la difference (pas besoin de guillemeter dans certaines comparaisons avec `[[ ]]`).
+
+---
+
+## Bash : tests utiles
+
+| Test | Vrai si... |
+| --- | --- |
+| `-e f` | existe (fichier ou dossier) |
+| `-f f` / `-d f` | fichier / dossier |
+| `-r f` / `-w f` / `-x f` | lisible / ecriture / executable |
+| `-s f` | existe et non vide |
+| `-z s` / `-n s` | chaine vide / non vide |
+| `s1 = s2` / `s1 != s2` | egalite de chaines |
+| `n1 -eq n2`, `-ne`, `-lt`, `-gt`, `-le`, `-ge` | tests numeriques |
+| `[[ s == *.log ]]` | glob sur chaine (uniquement avec `[[ ]]`) |
+| `[[ s =~ ^[0-9]+$ ]]` | regex sur chaine (uniquement avec `[[ ]]`) |
+
+```bash
+[[ -f "$1" && -r "$1" ]]    # ET logique avec [[ ]]
+[ -f "$1" ] && [ -r "$1" ]  # equivalent en POSIX
+[[ -z "${VAR:-}" ]]         # variable vide ou non definie
+```
+
+Note:
+Cette page est une fiche de reference. Pas la peine de la faire memoriser : la pointer pendant les exercices suivants des qu'un test est necessaire.
 
 ---
 
@@ -859,36 +877,54 @@ for VAR in LISTE; do
 done
 ```
 
-**Exemple**
+**Exemple — sur un glob de fichiers**
 
 ```bash
-# sur un glob de fichiers
 for f in *.log; do
   echo ">> $f"
   wc -l "$f"
 done
+```
 
-# sur une plage numerique
+> Le shell **expand le glob avant** de demarrer la boucle. C'est lui qui fait le travail, pas `ls`.
+
+Note:
+Faire taper la boucle dans un dossier qui contient quelques `.log` et quelques autres fichiers. Verifier que seuls les `.log` sont parcourus.
+
+---
+
+## Bash : `for` — variantes utiles
+
+**Sur une plage numerique**
+
+```bash
 for i in {1..5}; do
   echo "Tour $i"
 done
 
-# sur les arguments du script
-for arg in "$@"; do
+for i in {0..20..2}; do      # de 0 a 20, pas de 2
+  echo "$i"
+done
+```
+
+**Sur les arguments du script**
+
+```bash
+for arg in "$@"; do          # "$@" preserve les espaces
   echo "Argument: $arg"
 done
 ```
 
 <div class="info-box danger">
-  <strong>Anti-pattern</strong> : <code>for f in $(ls)</code> casse sur les espaces. Preferer <code>for f in *</code> (glob du shell), ou <code>while read</code> pour parser une sortie.
+  <strong>Anti-pattern</strong> : <code>for f in $(ls)</code> casse sur les espaces (un fichier "rapport final.txt" devient deux iterations). Preferer <code>for f in *</code> (glob shell), ou <code>while read</code> pour parser une sortie de commande.
 </div>
 
 Note:
-Faire vivre le bug : creer un fichier "rapport final.txt", lancer `for f in $(ls)` puis `for f in *`. La difference est immediate.
+Faire vivre le bug : creer "rapport final.txt", lancer `for f in $(ls)` puis `for f in *`. La difference est immediate.
 
 ---
 
-## Bash : `while read` (parser un flux)
+## Bash : `while read` — fichier ligne par ligne
 
 **Syntaxe**
 
@@ -896,31 +932,14 @@ Faire vivre le bug : creer un fichier "rapport final.txt", lancer `for f in $(ls
 while IFS= read -r LIGNE; do
   ACTIONS
 done < FICHIER
-
-COMMANDE | while IFS= read -r LIGNE; do
-  ACTIONS
-done
 ```
 
 **Exemple**
 
 ```bash
-# fichier ligne par ligne
 while IFS= read -r line; do
   echo "ligne: $line"
 done < /etc/hosts
-
-# sortie d'une commande, ligne par ligne
-ps -eo user,pid,comm | while IFS= read -r ligne; do
-  echo "$ligne"
-done
-
-# compteur classique
-count=0
-while [[ "$count" -lt 3 ]]; do
-  echo "$count"
-  count=$((count + 1))
-done
 ```
 
 | Forme | Pourquoi |
@@ -929,8 +948,41 @@ done
 | `-r` | empeche `read` d'interpreter les `\` (raw) |
 | `< FICHIER` | redirige le fichier en entree de la boucle |
 
+> La forme `while IFS= read -r` est **canonique**. C'est la bonne reponse pour 90% des "parser un fichier".
+
 Note:
-La forme `while IFS= read -r` est **canonique**. Tant qu'on n'a pas vu `find -print0`, c'est deja la bonne reponse pour 90% des cas.
+Faire essayer SANS `IFS=` ni `-r` sur un fichier avec un espace en debut de ligne pour voir le bug.
+
+---
+
+## Bash : `while read` — depuis un pipe + compteur
+
+**Depuis la sortie d'une commande**
+
+```bash
+ps -eo user,pid,comm | while IFS= read -r ligne; do
+  echo "$ligne"
+done
+
+find . -name "*.log" | while IFS= read -r f; do
+  wc -l "$f"
+done
+```
+
+> Attention : un pipe lance la boucle dans un **sous-shell**. Les variables modifiees dans la boucle ne survivent pas dehors (utiliser un fichier intermediaire ou `< <(commande)` si besoin).
+
+**Compteur classique avec `while [[ ]]`**
+
+```bash
+count=0
+while [[ "$count" -lt 3 ]]; do
+  echo "tour $count"
+  count=$((count + 1))
+done
+```
+
+Note:
+Le piege du sous-shell est un classique. Si quelqu'un fait `total=0; ... | while read; do total=...; done; echo $total` et obtient 0, c'est ce piege.
 
 ---
 
@@ -969,7 +1021,7 @@ Note:
 
 ---
 
-## Bash : fonctions et `main "$@"`
+## Bash : fonctions
 
 **Syntaxe**
 
@@ -983,15 +1035,35 @@ nom_fonction() {
 nom_fonction arg1 arg2    # appel : pas de virgules, juste des espaces
 ```
 
-**Exemple — pattern `main "$@"`**
+**Exemple court**
+
+```bash
+log() {
+  printf '[%s] %s\n' "$(date +%H:%M:%S)" "$*" >&2
+}
+
+log "demarrage"
+log "fin"
+```
+
+- `local` : sans, la variable POLLUE le script entier. **Toujours `local` dans une fonction.**
+- Une fonction renvoie via `return N`, ou via le code de sa derniere commande.
+- Appel : pas de parentheses, juste `nom arg1 arg2`. Pas de virgules.
+
+Note:
+Premier contact avec une fonction. Faire taper `log` dans un fichier et l'appeler 2 fois. Bien insister : pas de virgules entre arguments.
+
+---
+
+## Bash : pattern `main "$@"`
+
+**Structure cible**
 
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
 
-log() {
-  printf '[%s] %s\n' "$(date +%H:%M:%S)" "$*" >&2
-}
+log()   { printf '[%s] %s\n' "$(date +%H:%M:%S)" "$*" >&2; }
 
 audit() {
   local target="$1"
@@ -1008,16 +1080,18 @@ main() {
 main "$@"                 # convention : fin du fichier
 ```
 
-- `local` : sans, la variable POLLUE le script entier (hors fonction). **Toujours `local` dans une fonction.**
+- Toutes les fonctions sont definies en haut, `main` en bas.
 - `"$@"` avec guillemets : passe TOUS les arguments en preservant les espaces.
-- Une fonction renvoie via `return N`, ou via le code de sa derniere commande.
+- On lit le script "de bas en haut" : `main` pointe vers les fonctions necessaires.
+
+> **Pourquoi** : sans ce pattern, un script long devient une suite de commandes plates impossible a relire.
 
 Note:
-Le pattern `main "$@"` rend les scripts longs lisibles : on lit le `main` en bas et il pointe vers les fonctions definies plus haut. Insister.
+Le pattern `main "$@"` est une convention. Pas un standard, mais tres repandu : code lisible, testable (chaque fonction se teste isolement) et facile a etendre.
 
 ---
 
-## Bash : robustesse — `set -euo pipefail`
+## Bash : `set -euo pipefail`
 
 **Syntaxe**
 
@@ -1034,12 +1108,21 @@ IFS=$'\n\t'               # separateurs sains (pas l'espace)
 | `-E` | les fonctions heritent du `trap ERR` |
 | `-x` | mode debug : afficher chaque commande avant execution |
 
-**Exemple — sans et avec**
+> A mettre tout en haut du script, juste apres le shebang.
+
+Note:
+Decomposer sur le tableau. Si un test echoue avec `-e`, la solution n'est presque jamais de retirer `-e` : c'est de comprendre POURQUOI le test echoue.
+
+---
+
+## Bash : `set -e` en pratique
+
+**Sans et avec `-e`**
 
 ```bash
 # sans set -e, le script continue malgre l'echec
 ls /not/exist
-echo "je continue quand meme"     # affiche
+echo "je continue quand meme"     # AFFICHE
 
 # avec set -e, le script s'arrete a la 1re erreur
 set -e
@@ -1048,15 +1131,25 @@ echo "je continue quand meme"     # JAMAIS atteint
 ```
 
 <div class="info-box warning">
-  <code>set -euo pipefail</code> n'est pas magique : il revele les bugs caches mais peut <strong>casser</strong> des scripts qui ignoraient des erreurs (ex : <code>grep</code> qui ne matche pas retourne 1). Solution locale : <code>cmd || true</code>.
+  <code>set -euo pipefail</code> revele les bugs caches mais peut <strong>casser</strong> des scripts qui ignoraient des erreurs. Exemple celebre : <code>grep MOTIF fichier</code> qui ne matche pas retourne <code>1</code>. Solution locale : <code>cmd || true</code>.
 </div>
 
+```bash
+# le piege grep
+errors=$(grep -c ERROR app.log)   # set -e fait sortir si grep ne matche pas
+errors=$(grep -c ERROR app.log || true)  # OK, vaut 0 si rien
+
+# le piege variable optionnelle avec -u
+target="${1:-$HOME}"              # OK, defaut
+target="$1"                       # bug avec set -u si pas d'argument
+```
+
 Note:
-A mettre tout en haut du script, juste apres le shebang. Si un test echoue avec `-e`, la solution n'est presque jamais de retirer `-e` : c'est de comprendre POURQUOI le test echoue.
+Faire vivre les deux pieges (`grep` et `$1` avec `-u`). C'est la le plus haut "ROI" de la slide.
 
 ---
 
-## Bash : robustesse — `trap` + `mktemp`
+## Bash : `trap` — reagir aux signaux
 
 **Syntaxe**
 
@@ -1067,33 +1160,58 @@ trap 'COMMANDE' SIGNAL [SIGNAL...]
 | Signal | Quand il declenche |
 | --- | --- |
 | `EXIT` | a la fin du script (succes OU echec) |
-| `INT` | ctrl-c |
-| `TERM` | `kill <pid>` |
+| `INT` | `ctrl-c` |
+| `TERM` | `kill <pid>` (signal par defaut) |
 | `ERR` | une commande a echoue (avec `set -E`) |
 
-**Exemple — pattern dossier temporaire**
+```bash
+trap 'echo "ctrl-c recu"; exit 130' INT     # un signal
+trap 'cleanup' EXIT INT TERM                # plusieurs a la fois
+trap - EXIT                                 # desactiver
+```
+
+> `EXIT` est le plus utile : il s'execute QUOI QU'IL ARRIVE (succes, erreur, ctrl-c).
+
+Note:
+Demonstration : un script avec `trap 'echo BYE' EXIT`, le faire crasher avec `set -e` + commande qui echoue. Le `BYE` s'affiche.
+
+---
+
+## Bash : pattern dossier temporaire
+
+**Pourquoi** : on ne veut **jamais** laisser de fichier temporaire derriere, meme si le script crash.
 
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
 
-tmpdir=$(mktemp -d)                       # dossier unique
+tmpdir=$(mktemp -d)                       # dossier unique, ex: /tmp/tmp.XyZ123
 trap 'rm -rf "$tmpdir"' EXIT              # nettoyage garanti
 
 # travailler dans $tmpdir, peu importe la sortie
 echo "data" > "$tmpdir/work.txt"
 process "$tmpdir/work.txt"
-# pas besoin de rm a la fin : le trap s'en charge
+# pas de rm manuel : le trap s'en charge
 ```
 
-> `mktemp -d` + `trap ... EXIT` : on ne laisse **jamais** de fichier temporaire derriere, meme si le script crash.
+**Variante fichier**
+
+```bash
+tmpfile=$(mktemp)
+trap 'rm -f "$tmpfile"' EXIT
+
+curl -sS https://example.com > "$tmpfile"
+jq '.items' "$tmpfile"
+```
+
+> Regle : si tu cree un temporaire, tu pose le trap **dans la foulee**. Pas plus tard.
 
 Note:
-La regle : si tu cree un fichier ou dossier temporaire, tu pose le trap dans la foulee. Ne JAMAIS faire `rm -rf "$tmpdir"` a la fin manuellement (oublie + crash = pollution).
+Le pattern `mktemp -d` + `trap ... EXIT` est universel en script d'admin. Beaucoup de scripts pros commencent comme ca.
 
 ---
 
-## Bash : arguments propres avec `getopts`
+## Bash : `getopts` — la syntaxe
 
 **Syntaxe**
 
@@ -1108,7 +1226,21 @@ done
 shift $((OPTIND - 1))      # consomme les options, "$@" = args restants
 ```
 
-**Exemple**
+| Element | Role |
+| --- | --- |
+| `OPTSTRING` | lettres autorisees, `:` apres une lettre = option avec argument |
+| `$opt` | la lettre courante reconnue |
+| `$OPTARG` | l'argument associe (si `:` dans OPTSTRING) |
+| `$OPTIND` | indice du prochain argument a lire |
+
+> `getopts` gere les options **courtes** (`-v`, `-f val`, `-vf`). Pour `--long`, voir `getopt(1)` ou parsing manuel.
+
+Note:
+Insister sur le `:` dans OPTSTRING. C'est ce qui change "option booleenne" en "option avec valeur". Cause d'erreur n.1 chez les debutants.
+
+---
+
+## Bash : `getopts` — exemple complet
 
 ```bash
 #!/usr/bin/env bash
@@ -1133,21 +1265,26 @@ cible="${1:-}"
 [[ "$verbose" -eq 1 ]] && echo "verbose ON, file=$file, cible=$cible"
 ```
 
-- Dans `OPTSTRING`, un `:` apres une lettre signifie "cette option prend un argument".
-- `getopts` ne gere QUE les options courtes (`-v`, `-f val`). Pour `--long`, voir `getopt(1)` ou un parsing manuel.
-- Apres `shift`, `$1` est le 1er argument NON-option.
+**Appels qui marchent**
+
+```bash
+./script.sh -v cible
+./script.sh -v -f config.ini cible
+./script.sh -vf config.ini cible       # options groupees, getopts les gere
+./script.sh -h
+```
 
 Note:
-Standard pour des CLI Bash propres. Beaucoup de devs ecrivent leur propre parsing - getopts evite les bugs classiques sur les options groupees (`-vf`).
+Faire executer les 4 appels et observer le comportement. Bien noter le `shift $((OPTIND - 1))` : sans, `$1` reste l'option et pas la cible.
 
 ---
 
 <!-- class: demo -->
-## DEMO - Bash : casser un script avec des espaces
+## DEMO - le script qui casse
 
-<span class="callout-badge demo">Demo formateur - 5 min</span>
+<span class="callout-badge demo">Demo formateur - 3 min</span>
 
-Je projette un script pige :
+Je projette un script pige (volontairement) :
 
 ```bash
 #!/usr/bin/env bash
@@ -1157,9 +1294,26 @@ for f in $(find $target -type f); do
 done
 ```
 
-Je le lance contre un dossier qui contient `"rapport final.txt"`. Le script casse.
+Je le lance contre un dossier qui contient un fichier `rapport final.txt`. Le script affiche :
 
-Puis on **corrige en direct** :
+```
+Traite /tmp/demo/rapport
+Traite final.txt
+```
+
+> Le mot "final.txt" est traite comme un fichier separe. **L'espace dans le nom a casse la boucle.**
+
+Note:
+Faire vivre le bug en projection. C'est l'image qu'ils doivent garder en tete pour le reste de leur vie de scripteur.
+
+---
+
+<!-- class: demo -->
+## DEMO - la correction
+
+<span class="callout-badge demo">Demo formateur - 2 min</span>
+
+Mêmes commandes, **avec les bons reflexes** :
 
 ```bash
 target="$1"
@@ -1168,14 +1322,26 @@ find "$target" -type f -print0 | while IFS= read -r -d '' f; do
 done
 ```
 
+Sortie :
+
+```
+Traite : /tmp/demo/rapport final.txt
+```
+
+Les **trois changements** :
+
+1. `target="$1"` — guillemets autour de la variable.
+2. `find "$target"` — guillemets meme dans une commande.
+3. `-print0` + `while read -d ''` — separateur `\0` au lieu de l'espace.
+
 > La difference entre script de TP et script de prod : 4 paires de guillemets et `-print0`.
 
 Note:
-La meilleure facon d'ancrer "toujours guillemeter" : faire vivre le bug. Garder cet exemple en tete - c'est le 80/20 du Bash robuste.
+On enchaine immediatement avec la slide "Recette : iterer sur des fichiers" qui formalise ce pattern.
 
 ---
 
-## Recette : iterer sur des fichiers (gerer les espaces)
+## Recette : iterer sur des fichiers
 
 **Syntaxe**
 
@@ -1194,49 +1360,100 @@ find . -type f -name "*.log" -print0 | while IFS= read -r -d '' f; do
 done
 ```
 
-| Element | Pourquoi |
-| --- | --- |
-| `-print0` | `find` separe avec un `\0` au lieu d'un `\n` |
-| `read -d ''` | `read` attend ce `\0` comme delimiteur |
-| `IFS=` + `-r` | comme pour les fichiers (pas de decoupage, pas d'echappement) |
-
-> C'est la **seule** facon fiable de gerer tous les noms de fichiers possibles (espaces, retours ligne, caracteres speciaux). Direct successeur de la DEMO precedente.
+> C'est la **seule** facon fiable de gerer tous les noms de fichiers possibles (espaces, retours ligne, caracteres speciaux). Successeur direct de la DEMO precedente.
 
 Note:
-Apres avoir vu le bug avec espaces a la DEMO, ce pattern devient evident. Le faire memoriser comme reflexe.
+Le faire taper. C'est le pattern le plus important du jour pour ecrire des scripts qui ne casseront pas en prod.
 
 ---
 
-## Recettes Bash de poche
+## Recette : iterer — pourquoi chaque option
 
-**`die()` — quitter proprement**
+| Element | Pourquoi |
+| --- | --- |
+| `find -print0` | `find` separe avec un caractere `\0` (NUL) au lieu de `\n`. `\0` ne peut JAMAIS apparaitre dans un nom de fichier. |
+| `read -d ''` | dit a `read` d'attendre un `\0` comme delimiteur (au lieu du `\n` par defaut). |
+| `IFS=` | empeche `read` de decouper sur les espaces / tabs en debut/fin de ligne. |
+| `-r` | empeche `read` d'interpreter les `\` (raw read). |
+
+**Variantes utiles**
+
+```bash
+# avec un compteur (sans piege du sous-shell)
+total=0
+while IFS= read -r -d '' f; do
+  total=$((total + 1))
+done < <(find . -type f -name "*.log" -print0)
+echo "$total fichiers traites"            # marche : pas de pipe -> pas de sous-shell
+
+# avec xargs (alternative, mais limitee)
+find . -type f -name "*.log" -print0 | xargs -0 wc -l
+```
+
+> Le `< <(...)` est une **process substitution** : le shell la traite comme un fichier. Permet de garder la boucle dans le shell principal et de modifier des variables.
+
+Note:
+La variante `< <(...)` resout le piege du sous-shell evoque slide while. Si quelqu'un demande "comment compter dans une boucle", c'est la reponse.
+
+---
+
+## Recettes Bash — `die()` et heredoc
+
+**`die()` — quitter proprement avec un message**
 
 ```bash
 die() { echo "ERREUR: $*" >&2; exit 1; }
 
 [[ -d "$1" ]] || die "$1 n'existe pas"
+[[ -n "${API_KEY:-}" ]] || die "API_KEY non definie"
+command -v jq >/dev/null || die "jq requis, installe-le"
 ```
 
-**Heredoc — generer un fichier de config**
+> `die` est le rituel le plus important : un script pro a **presque toujours** un helper `die`. Garder le snippet quelque part.
+
+**Heredoc — generer un fichier**
 
 ```bash
 cat > /tmp/conf.ini <<'EOF'
 [server]
 port = 8080
+host = localhost
+EOF
+
+# avec interpolation
+cat > /tmp/welcome.txt <<EOF
+Bienvenue $USER
+Date : $(date -Iseconds)
 EOF
 ```
 
-`<<'EOF'` (avec guillemets) : litteral, pas d'interpolation. `<<EOF` (sans) : interpolation des `$var`.
+| Forme | Interpolation `$var` ? |
+| --- | --- |
+| `<<'EOF'` (avec guillemets) | non, litteral |
+| `<<EOF` (sans guillemets) | oui, comme une chaine `"..."` |
+
+Note:
+`die` peut etre appele comme `die "msg"` ou `die "msg avec %s" "$var"`. Le `$*` join les arguments avec un espace.
+
+---
+
+## Recettes Bash — tableaux et confirmation
 
 **Tableau — liste indexee**
 
 ```bash
 fichiers=("a.txt" "b.txt" "c.txt")
-for f in "${fichiers[@]}"; do
+
+for f in "${fichiers[@]}"; do            # iteration (TOUJOURS guillemeter)
   echo "$f"
 done
+
 echo "${#fichiers[@]} elements"          # taille
+echo "${fichiers[0]}"                    # 1er element
+fichiers+=("d.txt")                      # ajouter
 ```
+
+> Sans les guillemets autour de `"${fichiers[@]}"`, on retombe dans le bug des espaces.
 
 **Confirmation avant action destructive**
 
@@ -1246,10 +1463,15 @@ read -r -p "Supprimer $target ? [y/N] " ans
 rm -rf -- "$target"
 ```
 
-> Le `--` apres `rm` (et la plupart des commandes) signale "fin des options" : protege si `$target` commence par `-`.
+| Element | Role |
+| --- | --- |
+| `read -r -p "..."` | affiche le prompt et lit la reponse |
+| `[[ "$ans" =~ ^[yY]$ ]]` | vrai uniquement si `y` ou `Y` (regex) |
+| `\|\| exit 0` | sort proprement si l'utilisateur n'a pas confirme |
+| `--` apres `rm` | "fin des options" : protege si `$target` commence par `-` |
 
 Note:
-Donner ces 4 patterns aux etudiants. `die` est le rituel le plus important : un script pro a presque toujours un helper `die`.
+La regex `^[yY]$` est volontairement stricte : on ne veut pas matcher "yes" ou "yeahno". Faire une demo : "y" -> supprime, "Y" -> supprime, "yes" ou rien -> annule.
 
 ---
 

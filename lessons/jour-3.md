@@ -37,47 +37,54 @@ Objectif : relier les commandes apprises au fonctionnement interne d'un serveur 
   <div class="plan-step">
     <span class="plan-num">01</span>
     <span class="plan-icon">[<<]</span>
-    <div class="plan-time">30 min - matin</div>
+    <div class="plan-time">25 min - matin</div>
     <h4>Reprise + questions</h4>
     <p>Rejouer les gestes clefs J1-J2. Repondre aux flous.</p>
   </div>
   <div class="plan-step">
     <span class="plan-num">02</span>
+    <span class="plan-icon">[.*]</span>
+    <div class="plan-time">35 min - matin</div>
+    <h4>Regex</h4>
+    <p>Briques, quantifieurs, BRE/ERE. Usage en <code>grep</code>, <code>sed</code>, <code>awk</code>, bash <code>[[ =~ ]]</code>.</p>
+  </div>
+  <div class="plan-step">
+    <span class="plan-num">03</span>
     <span class="plan-icon">[ps]</span>
     <div class="plan-time">70 min - matin</div>
     <h4>Processus et memoire</h4>
     <p>Scheduler, page cache, swap, OOM. <code>ps</code>, <code>top</code>, <code>free</code>, signaux.</p>
   </div>
   <div class="plan-step">
-    <span class="plan-num">03</span>
+    <span class="plan-num">04</span>
     <span class="plan-icon">[apt]</span>
     <div class="plan-time">55 min - matin</div>
     <h4>Paquets</h4>
     <p><code>apt update/install/remove</code>, depots, comparaison <code>dnf</code>.</p>
   </div>
   <div class="plan-step">
-    <span class="plan-num">04</span>
+    <span class="plan-num">05</span>
     <span class="plan-icon">[ctl]</span>
     <div class="plan-time">75 min - apres-midi</div>
     <h4>systemd et logs</h4>
     <p><code>systemctl</code>, <code>journalctl</code>, <code>start</code> vs <code>enable</code>, diagnostic.</p>
   </div>
   <div class="plan-step">
-    <span class="plan-num">05</span>
+    <span class="plan-num">06</span>
     <span class="plan-icon">[net]</span>
     <div class="plan-time">75 min - apres-midi</div>
     <h4>Reseau</h4>
     <p>IP, route, DNS, port. Methode incident en 6 questions.</p>
   </div>
   <div class="plan-step">
-    <span class="plan-num">06</span>
+    <span class="plan-num">07</span>
     <span class="plan-icon">[ssh]</span>
     <div class="plan-time">55 min - apres-midi</div>
     <h4>SSH</h4>
     <p>Cles ed25519, <code>ssh-copy-id</code>, permissions, durcissement minimal.</p>
   </div>
   <div class="plan-step">
-    <span class="plan-num">07</span>
+    <span class="plan-num">08</span>
     <span class="plan-icon">[v]</span>
     <div class="plan-time">60 min - cloture</div>
     <h4>Projet final + Q&amp;A</h4>
@@ -108,6 +115,169 @@ journalctl -p warning -n 20
 
 Note:
 Chronometrer. C'est le rituel de diagnostic de debut de session.
+
+---
+
+## Regex : la grammaire des motifs
+
+Une **expression reguliere** decrit un **motif** plutot qu'une chaine fixe.
+
+```bash
+grep "error" app.log              # cherche le mot "error"
+grep -E "error|warn|fatal" app.log # un mot OU un autre
+grep -E "^[0-9]{4}-[0-9]{2}" app.log # lignes qui commencent par une date
+```
+
+<div class="three-cols">
+  <div class="card accent">
+    <h4>Filtrer</h4>
+    <p>Garder ou rejeter des lignes (<code>grep</code>, <code>awk</code>).</p>
+  </div>
+  <div class="card blue">
+    <h4>Extraire</h4>
+    <p>Capturer des champs (<code>grep -o</code>, <code>sed</code>, <code>awk</code>).</p>
+  </div>
+  <div class="card amber">
+    <h4>Transformer</h4>
+    <p>Substituer ligne par ligne (<code>sed s/.../.../</code>).</p>
+  </div>
+</div>
+
+> Une regex est un **mini-langage**. On l'apprend brique par brique, on la teste etape par etape.
+
+Note:
+Annoncer le plan : briques, quantifieurs, dialectes BRE/ERE, puis utilisation reelle. Insister : la regex se construit incrementalement, jamais d'un coup.
+
+---
+
+## Briques de base : caracteres, classes, ancrages
+
+```bash
+echo "ssh started on port 22" | grep -E "ssh"        # litteral
+echo "ssh started on port 22" | grep -E "s.h"        # . = un caractere
+echo "user42" | grep -E "[a-z]+[0-9]+"               # classe + chiffres
+echo "abc 123" | grep -Eo "[^ ]+"                    # tout sauf espace
+echo "hello world" | grep -E "^hello"                # debut de ligne
+echo "hello world" | grep -E "world$"                # fin de ligne
+```
+
+| Brique | Sens |
+| --- | --- |
+| `.` | n'importe quel caractere (sauf saut de ligne) |
+| `[abc]` | un caractere parmi `a`, `b` ou `c` |
+| `[a-z]` / `[0-9]` | une plage |
+| `[^abc]` | tout caractere SAUF `a`, `b`, `c` |
+| `\d` `\w` `\s` | chiffre / mot / espace (PCRE, **pas** BRE/ERE) |
+| `^` / `$` | debut / fin de ligne |
+| `\b` | frontiere de mot (GNU grep) |
+
+<div class="info-box warning">
+  En <code>grep</code> de base et <code>sed</code>, <code>\d</code> n'existe pas. Utiliser <code>[0-9]</code>. Idem pour <code>\w</code> -&gt; <code>[A-Za-z0-9_]</code>.
+</div>
+
+Note:
+Faire taper chaque ligne. Bien insister sur la difference entre `[abc]` (un seul caractere) et `abc` (trois caracteres a la suite).
+
+---
+
+## Quantifieurs et alternatives
+
+```bash
+echo "aaab" | grep -Eo "a+"             # 1 ou plus
+echo "color colour" | grep -Eo "colou?r" # ? = 0 ou 1
+echo "ab abc abcc" | grep -Eo "abc*"     # * = 0 ou plus
+echo "ip 10.0.0.1" | grep -Eo "[0-9]{1,3}(\.[0-9]{1,3}){3}"
+echo "INFO ou ERROR" | grep -E "INFO|ERROR"  # alternative
+echo "bonjour01" | grep -Eo "(jour)[0-9]+"   # groupe + capture
+```
+
+| Quantifieur | Effet |
+| --- | --- |
+| `*` | 0 ou plus |
+| `+` | 1 ou plus (ERE) |
+| `?` | 0 ou 1 (ERE) |
+| `{n}` | exactement n |
+| `{n,m}` | entre n et m |
+| `(motif)` | groupe |
+| <code>a&#124;b</code> | a OU b (ERE) |
+
+<div class="info-box">
+  Une regex est <strong>gourmande</strong> par defaut : elle prend le plus long match possible. Pour limiter, on ancre avec <code>^</code> / <code>$</code> ou on utilise des classes plus strictes.
+</div>
+
+Note:
+Le piege classique : `.*` mange tout. Exemple : `grep -Eo "<.*>"` sur `<a><b>` matche `<a><b>` au lieu de `<a>`. Lui preferer `<[^>]*>`.
+
+---
+
+## BRE vs ERE : savoir quand echapper
+
+Les outils Unix connaissent **deux dialectes** :
+
+| Outil | Defaut | ERE active avec |
+| --- | --- | --- |
+| `grep` | BRE | `-E` (ou `egrep`) |
+| `sed` | BRE | `-E` (ou `-r`) |
+| `awk` | ERE | (toujours) |
+| Bash `[[ =~ ]]` | ERE | (toujours) |
+
+```bash
+grep    "ab\+"   fichier   # BRE : + litteral, sauf si \+
+grep -E "ab+"    fichier   # ERE : + quantifieur
+sed     's/ab\+/X/'        # BRE
+sed -E  's/ab+/X/'         # ERE, plus lisible
+```
+
+<div class="info-box danger">
+  Regle de survie : <strong>toujours <code>-E</code> avec grep et sed</strong> sauf raison precise. Les regex deviennent lisibles au lieu d'etre une foret de <code>\</code>.
+</div>
+
+```bash
+# BRE (penible)
+grep    "^[A-Z]\{3\}-[0-9]\{4\}$" tickets.txt
+# ERE (lisible)
+grep -E "^[A-Z]{3}-[0-9]{4}$"     tickets.txt
+```
+
+Note:
+Faire taper les deux versions cote a cote. Le declic est : "ah, le `\` change de signification selon le dialecte".
+
+---
+
+## Regex en pratique : bash, sed, awk
+
+**Tester une chaine en bash avec `[[ =~ ]]`**
+
+```bash
+read -r -p "Email ? " e
+if [[ "$e" =~ ^[a-z0-9._-]+@[a-z0-9.-]+\.[a-z]{2,}$ ]]; then
+  echo "ok"
+else
+  echo "format invalide" >&2
+fi
+```
+
+**Substituer avec `sed`**
+
+```bash
+sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2}/<DATE>/g' app.log
+sed -E 's/^([A-Z]+):/[\1]/' app.log     # \1 = 1er groupe capture
+```
+
+**Filtrer / extraire avec `awk`**
+
+```bash
+awk '/^ERROR/ {print}' app.log                      # lignes ERROR
+awk '$1 ~ /^192\.168\./ {print $7}' web.log         # IP interne
+awk 'match($0, /[0-9]{2}:[0-9]{2}:[0-9]{2}/) {print substr($0, RSTART, RLENGTH)}' app.log
+```
+
+<div class="info-box">
+  Bash <code>=~</code> ne demande <strong>pas</strong> de guillemets autour de la regex (et c'est meme deconseille). On guillemete <strong>la chaine testee</strong>, pas le motif.
+</div>
+
+Note:
+Trois patterns a retenir : `[[ s =~ ^...$ ]]` pour valider une saisie, `sed -E 's/.../.../'` pour transformer, `awk '/motif/ {...}'` ou `$N ~ /motif/` pour filtrer par champ. C'est 90% des besoins reels.
 
 ---
 
